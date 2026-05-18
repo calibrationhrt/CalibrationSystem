@@ -19,10 +19,13 @@ function parseExcelDate(v) {
   if (!v) return null;
 
   if (v instanceof Date) {
-    const y = v.getFullYear();
-    const m = String(v.getMonth() + 1).padStart(2, '0');
-    const d = String(v.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    const msPerDay = 86400000;
+    const rounded  = new Date(Math.round(v.getTime() / msPerDay) * msPerDay);
+    return [
+      rounded.getUTCFullYear(),
+      String(rounded.getUTCMonth() + 1).padStart(2, '0'),
+      String(rounded.getUTCDate()).padStart(2, '0')
+    ].join('-');
   }
 
   const s = String(v).trim();
@@ -44,12 +47,13 @@ function calcExpire(lastDateStr, interval) {
   const [y, m, d] = lastDateStr.split('-').map(Number);
   const date = new Date(y, m - 1, d);
 
-  const regex = /(\d+)\s*(year|years|y|month|months|m|day|days|d)/g;
+  const regex = /(\d+)\s*(year|years|y|month|months|m|day|days|d)/gi;
+
   let match;
 
   while ((match = regex.exec(interval)) !== null) {
     const value = parseInt(match[1]);
-    const unit = match[2];
+    const unit = match[2].toLowerCase();
     if (unit.startsWith("y")) date.setFullYear(date.getFullYear() + value);
     if (unit.startsWith("m")) date.setMonth(date.getMonth() + value);
     if (unit.startsWith("d")) date.setDate(date.getDate() + value);
@@ -72,7 +76,6 @@ async function syncExcel() {
     const rows = rawRows.map(row => {
       const lastDateStr = parseExcelDate(row["วันสอบเทียบล่าสุด"]);
       const interval = row["รอบสอบเทียบ"] || null;
-
       return {
         code:     row["รหัสเครื่องมือ"],
         name:     row["ชื่อเครื่องมือ"],
@@ -82,7 +85,7 @@ async function syncExcel() {
         owner:    row["ผู้รับผิดชอบ"],
         last:     lastDateStr,
         interval: interval,
-        expire:   calcExpire(lastDateStr, interval), // ✅ ส่ง null ได้เลย เพื่อ clear ค่าเก่าใน DB
+        expire:   calcExpire(lastDateStr, interval),
         source:   row["แหล่งสอบเทียบ"],
         cert:     row["เลขที่ใบรับรอง"],
         lab:      row["ห้องปฏิบัติการ"],
@@ -90,17 +93,48 @@ async function syncExcel() {
       };
     });
 
-    console.log(rows.slice(0, 3));
-    console.log(`📦 ${rows.length} rows`);
+    // ดึงข้อมูลปัจจุบันจาก Supabase มาเปรียบเทียบ
+    const { data: existing, error: fetchError } = await supabase
+      .from("tools")
+      .select("code,name,type,dept,loc,owner,last,interval,expire,source,cert,lab,status");
+
+    if (fetchError) {
+      console.error("❌ Fetch Error:", fetchError);
+      return;
+    }
+
+    // map code → row เพื่อ lookup O(1)
+    const existingMap = Object.fromEntries(existing.map(r => [r.code, r]));
+
+    // เปรียบเทียบทีละ field — เอาเฉพาะที่เปลี่ยน
+    const FIELDS = ['name','type','dept','loc','owner','last','interval','expire','source','cert','lab','status'];
+
+    const changed = rows.filter(row => {
+      const old = existingMap[row.code];
+      if (!old) return true; // row ใหม่ ยังไม่มีใน DB
+
+      return FIELDS.some(f => {
+        const newVal = row[f] ?? null;
+        const oldVal = old[f] ?? null;
+        return String(newVal) !== String(oldVal);
+      });
+    });
+
+    if (!changed.length) {
+      console.log("✅ ไม่มีการเปลี่ยนแปลง");
+      return;
+    }
+
+    console.log(`📝 เปลี่ยนแปลง ${changed.length} rows:`, changed.map(r => r.code));
 
     const { error } = await supabase
       .from("tools")
-      .upsert(rows, { onConflict: "code", ignoreDuplicates: false });
+      .upsert(changed, { onConflict: "code", ignoreDuplicates: false });
 
     if (error) {
       console.error("❌ Supabase Error:", error);
     } else {
-      console.log("✅ Sync Success");
+      console.log(`✅ Sync Success — อัปเดต ${changed.length} rows`);
     }
 
   } catch (err) {
