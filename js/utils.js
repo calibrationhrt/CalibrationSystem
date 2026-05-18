@@ -16,9 +16,12 @@ function formatDateLocal(date) {
 
 /** คำนวณจำนวนวันถึงวันหมดอายุ (ลบ = เกินแล้ว) */
 function diffDays(expire) {
-  const today = new Date();
+  if (!expire) return null;
+  
   const exp   = parseLocalDate(expire);
+   if (!exp) return null;
 
+  const today = new Date();
   today.setHours(0, 0, 0, 0);
   exp.setHours(0, 0, 0, 0);
 
@@ -50,16 +53,19 @@ function getStatus(expire) {
 function parseLocalDate(str) {
   if (!str) return null;
   const [y, m, d] = str.split('-').map(Number);
-  return new Date(y, m - 1, d); // local midnight ไม่มี timezone ปัญหา
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
 }
 
 /** แปลง date string เป็นรูปแบบไทย เช่น 21 เม.ย. 69 */
 function fmtDate(d) {
-  return parseLocalDate(d).toLocaleDateString('th-TH', {
+  if (!d) return '-';
+  const date = parseLocalDate(d);
+  if (!date) return '-';
+  return date.toLocaleDateString('th-TH', {
     day: '2-digit', month: 'short', year: '2-digit'
   });
 }
-
 /** SVG icon สำหรับ alert ตามสถานะ */
 function alertIconSvg(cls) {
   if (cls === 'overdue') {
