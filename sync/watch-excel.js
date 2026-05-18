@@ -12,6 +12,28 @@ const supabase = createClient(
   SUPABASE_KEY
 );
 
+function calcExpire(lastDate, interval) {
+
+  if (!lastDate || !interval) return null;
+
+  const date = new Date(lastDate);
+
+  const regex = /(\d+)(d|m|y)/g;
+  let match;
+
+  while ((match = regex.exec(interval)) !== null) {
+
+    const value = parseInt(match[1]);
+    const unit = match[2];
+
+    if (unit === "d") date.setDate(date.getDate() + value);
+    if (unit === "m") date.setMonth(date.getMonth() + value);
+    if (unit === "y") date.setFullYear(date.getFullYear() + value);
+  }
+
+  return date.toISOString().split("T")[0];
+}
+
 const EXCEL_FILE = "D:\\Plan\\Calibration_Website.xlsx";
 
 async function syncExcel() {
