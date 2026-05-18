@@ -2,8 +2,7 @@ import chokidar from "chokidar";
 import * as XLSX from "xlsx";
 import fs from "fs";
 import { createClient } from "@supabase/supabase-js";
-
-XLSX.set_fs(fs);
+import { type } from "os";
 
 const SUPABASE_URL = "https://zecloiixseojpeqferow.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplY2xvaWl4c2VvanBlcWZlcm93Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njg1MDUxMywiZXhwIjoyMDkyNDI2NTEzfQ.9m7Z22YbuSscIpCwgtjZwUyLFTISBFASrHxxnfZJjv8";
@@ -20,13 +19,48 @@ async function syncExcel() {
 
     console.log("📖 Reading Excel...");
 
-    const workbook = XLSX.readFile(EXCEL_FILE, {
+    const file = await fs.promises.readFile(EXCEL_FILE);
+
+    const workbook = XLSX.read(file, {
+        type: "buffer",
         cellDates: true
     });
 
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-    const rows = XLSX.utils.sheet_to_json(sheet);
+    const rawRows = XLSX.utils.sheet_to_json(sheet);
+
+    const rows = rawRows.map(row => {
+
+    const lastDate = row["วันสอบเทียบล่าสุด"];
+    const interval = row["รอบสอบเทียบ"];
+
+    return {
+        code: row["รหัสเครื่องมือ"] || "",
+        name: row["ชื่อเครื่องมือ"] || "",
+        type: row["ประเภท"] || "",
+        dept: row["แผนก"] || "",
+        loc: row["ตำแหน่งที่ตั้ง"] || "",
+        owner: row["ผู้รับผิดชอบ"] || "",
+
+        last: lastDate || null,
+
+        interval: interval || "",
+
+        expire: interval
+        ? calcExpire(lastDate, interval)
+        : null,
+
+        source: row["แหล่งสอบเทียบ"] || "",
+
+        cert: row["เลขที่ใบรับรอง"] || "",
+
+        lab: row["ห้องปฏิบัติการ"] || "",
+
+        status: row["สถานะ"] || "Active"
+    };
+
+    });
     console.log(rows.slice(0,3));
 
     console.log(`📦 ${rows.length} rows`);
