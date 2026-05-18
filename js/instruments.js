@@ -101,18 +101,18 @@ function parseImportFile(buffer) {
 
       // แปลงวันที่จาก Excel serial
       if ((col.key === 'last') && row[idx] instanceof Date) {
-        val = formatDateLocal(row[idx]);
+        const msPerDay = 86400000;
+        const rounded  = new Date(Math.round(row[idx].getTime() / msPerDay) * msPerDay);
+        val = `${rounded.getUTCFullYear()}-${String(rounded.getUTCMonth()+1).padStart(2,'0')}-${String(rounded.getUTCDate()).padStart(2,'0')}`;
+
       } else if (col.key === 'last' && val) {
         if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
-          // DD/MM/YYYY
           const [d, m, y] = val.split('/');
           val = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
         } else if (/^\d{2}-\d{2}-\d{2}$/.test(val)) {
-          // DD-MM-YY 
           const [d, m, y] = val.split('-');
           val = `20${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
         } else if (/^\d{2}-\d{2}-\d{4}$/.test(val)) {
-          // DD-MM-YYYY
           const [d, m, y] = val.split('-');
           val = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
         }
