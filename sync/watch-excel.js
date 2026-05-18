@@ -1,9 +1,9 @@
-import chokidar from "chokidar";
 import * as XLSX from "xlsx";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://zecloiixseojpeqferow.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplY2xvaWl4c2VvanBlcWZlcm93Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njg1MDUxMywiZXhwIjoyMDkyNDI2NTEzfQ.9m7Z22YbuSscIpCwgtjZwUyLFTISBFASrHxxnfZJjv8";
+const chokidar = require("chokidar");
 
 const supabase = createClient(
   SUPABASE_URL,
