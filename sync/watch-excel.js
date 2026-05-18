@@ -1,16 +1,16 @@
+import chokidar from "chokidar";
 import * as XLSX from "xlsx";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://zecloiixseojpeqferow.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplY2xvaWl4c2VvanBlcWZlcm93Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njg1MDUxMywiZXhwIjoyMDkyNDI2NTEzfQ.9m7Z22YbuSscIpCwgtjZwUyLFTISBFASrHxxnfZJjv8";
-const chokidar = require("chokidar");
 
 const supabase = createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
-const EXCEL_FILE = "./calibration.xlsx";
+const EXCEL_FILE = "D:\\Plan\\Calibration_Website.xlsx";
 
 async function syncExcel() {
   try {
@@ -46,13 +46,15 @@ let timeout;
 
 chokidar.watch(EXCEL_FILE).on("change", () => {
 
-  console.log("📝 Excel Changed");
-
   clearTimeout(timeout);
 
-  timeout = setTimeout(() => {
-    syncExcel();
-  }, 2000);
+  timeout = setTimeout(async () => {
+
+    console.log("📝 Excel Changed");
+
+    await syncExcel();
+
+  }, 3000);
 
 });
 
