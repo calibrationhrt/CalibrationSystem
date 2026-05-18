@@ -17,7 +17,7 @@ function formatDateLocal(date) {
 /** คำนวณจำนวนวันถึงวันหมดอายุ (ลบ = เกินแล้ว) */
 function diffDays(expire) {
   const today = new Date();
-  const exp   = new Date(expire);
+  const exp   = parseLocalDate(expire);
 
   today.setHours(0, 0, 0, 0);
   exp.setHours(0, 0, 0, 0);
@@ -47,9 +47,15 @@ function getStatus(expire) {
                    return { cls: 'ok',      label: 'ปกติ (' + d           + ' วัน)', badgeCls: 'badge-ok'     };
 }
 
+function parseLocalDate(str) {
+  if (!str) return null;
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d); // local midnight ไม่มี timezone ปัญหา
+}
+
 /** แปลง date string เป็นรูปแบบไทย เช่น 21 เม.ย. 69 */
 function fmtDate(d) {
-  return new Date(d).toLocaleDateString('th-TH', {
+  return parseLocalDate(d).toLocaleDateString('th-TH', {
     day: '2-digit', month: 'short', year: '2-digit'
   });
 }
@@ -77,7 +83,7 @@ function alertIconSvg(cls) {
 function calcExpire(lastDate, interval) {
   if (!lastDate || !interval) return null;
 
-  const date  = new Date(lastDate);
+  const date  = parseLocalDate(lastDate);
   const regex = /(\d+)(d|m|y)/g;
   let match;
 
