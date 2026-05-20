@@ -375,7 +375,6 @@ function renderInstTable() {
         <td>${t.dept}</td>
         <td>${fmtDate(t.last)}</td>
         <td style="font-weight:${s.cls !== 'ok' ? '600' : '400'}">${fmtDate(t.expire)}</td>
-        <td>${t.owner}</td>
         <td><span class="badge ${s.badgeCls}"><span class="badge-dot"></span>${s.label}</span></td>
       </tr>`;
   }).join('');
