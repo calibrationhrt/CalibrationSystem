@@ -291,22 +291,40 @@ function sortBy(col) {
   renderInstruments();
 }
 
+/* ── INSTRUMENTS PAGINATION STATE ── */
+let instPage    = 1;
+let instPerPage = 100;
+let instFiltered = [];   // เก็บ filtered data ไว้ใช้ร่วมกัน
+
+function instChangePerPage(val) {
+  instPerPage = parseInt(val);
+  instPage    = 1;
+  renderInstruments();
+}
+
+function instChangePage(page) {
+  const totalPages = Math.ceil(instFiltered.length / instPerPage);
+  if (page < 1 || page > totalPages) return;
+  instPage = page;
+  renderInstTable();   // re-render เฉพาะตาราง+pagination ไม่ต้อง filter ใหม่
+}
+
 function renderInstruments() {
-  const q  = (document.getElementById('inst-search').value || '').toLowerCase();
-  const sf = document.getElementById('inst-status').value;
-  const df = document.getElementById('inst-dept').value;
+  const q   = (document.getElementById('inst-search').value || '').toLowerCase();
+  const sf  = document.getElementById('inst-status').value;
+  const df  = document.getElementById('inst-dept').value;
   const sf2 = document.getElementById('inst-status-active').value;
 
-  let data = tools.filter(t => {
-    const s        = getStatus(t.expire).cls;
-    const matchQ   = !q  || (t.code + t.name + t.owner).toLowerCase().includes(q);
-    const matchSF  = !sf || s === sf;
-    const matchDF  = !df || t.dept === df;
-     const matchSA = !sf2 || (t.status || 'Active') === sf2;
+  instFiltered = tools.filter(t => {
+    const s       = getStatus(t.expire).cls;
+    const matchQ  = !q   || (t.code + t.name + t.owner).toLowerCase().includes(q);
+    const matchSF = !sf  || s === sf;
+    const matchDF = !df  || t.dept === df;
+    const matchSA = !sf2 || (t.status || 'Active') === sf2;
     return matchQ && matchSF && matchDF && matchSA;
   });
 
-  data.sort((a, b) => {
+  instFiltered.sort((a, b) => {
     let va, vb;
     if (sortCol === 'expire' || sortCol === 'last') {
       va = new Date(a[sortCol]);
@@ -318,17 +336,36 @@ function renderInstruments() {
     return va > vb ? sortDir : va < vb ? -sortDir : 0;
   });
 
-  const tbody = document.getElementById('inst-tbody');
-  const empty = document.getElementById('inst-empty');
+  instPage = 1;   // reset page ทุกครั้งที่ filter ใหม่
+  renderInstTable();
+}
 
-  if (!data.length) {
+function renderInstTable() {
+  const tbody      = document.getElementById('inst-tbody');
+  const empty      = document.getElementById('inst-empty');
+  const total      = instFiltered.length;
+  const totalPages = Math.max(1, Math.ceil(total / instPerPage));
+
+  // clamp page
+  if (instPage > totalPages) instPage = totalPages;
+
+  // slice data
+  const start  = (instPage - 1) * instPerPage;
+  const end    = Math.min(start + instPerPage, total);
+  const paged  = instFiltered.slice(start, end);
+
+  // empty state
+  if (!total) {
     tbody.innerHTML = '';
     empty.style.display = 'flex';
+    document.getElementById('inst-pagination').style.visibility = 'hidden';
     return;
   }
   empty.style.display = 'none';
+  document.getElementById('inst-pagination').style.visibility = 'visible';
 
-  tbody.innerHTML = data.map(t => {
+  // render rows
+  tbody.innerHTML = paged.map(t => {
     const s = getStatus(t.expire);
     return `
       <tr class="row-${s.cls}" style="cursor:pointer" onclick="openDetail(${t.id})">
@@ -340,9 +377,49 @@ function renderInstruments() {
         <td style="font-weight:${s.cls !== 'ok' ? '600' : '400'}">${fmtDate(t.expire)}</td>
         <td>${t.owner}</td>
         <td><span class="badge ${s.badgeCls}"><span class="badge-dot"></span>${s.label}</span></td>
-      </td>
       </tr>`;
   }).join('');
+
+  // scroll tbody กลับบนสุดเมื่อเปลี่ยนหน้า
+  document.querySelector('#page-instruments .table-wrap').scrollTop = 0;
+
+  // update info
+  document.getElementById('inst-range').textContent =
+    total ? `${start + 1}–${end}` : '0';
+  document.getElementById('inst-total').textContent = total.toLocaleString();
+
+  // pagination buttons
+  document.getElementById('inst-prev').disabled = instPage <= 1;
+  document.getElementById('inst-next').disabled = instPage >= totalPages;
+
+  // page number buttons (max 7 แสดง)
+  renderPageNumbers('inst-page-numbers', instPage, totalPages, instChangePage);
+}
+
+function renderPageNumbers(containerId, current, total, onClickFn) {
+  const wrap = document.getElementById(containerId);
+  if (total <= 1) { wrap.innerHTML = ''; return; }
+
+  const pages = [];
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (current > 3)          pages.push('...');
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i);
+    }
+    if (current < total - 2)  pages.push('...');
+    pages.push(total);
+  }
+
+  wrap.innerHTML = pages.map(p =>
+    p === '...'
+      ? `<span class="page-ellipsis">…</span>`
+      : `<button class="page-btn ${p === current ? 'active' : ''}"
+           onclick="${onClickFn.name}(${p})">${p}</button>`
+  ).join('');
 }
 
 /* ── ADD MODAL ── */
