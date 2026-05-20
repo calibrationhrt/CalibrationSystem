@@ -178,11 +178,35 @@
             </div>
             <div id="donut-chart-wrap"></div>
           </div>
-        
+        </div>
+
+        <div class="two-col2">
+          <div class="card required-tools">
+            <div class="card-head">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                เครื่องมือที่ต้องดำเนินการ
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="goPage('instruments')">ดูทั้งหมด →</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th>รหัส</th><th>ชื่อเครื่องมือ</th><th>แผนก</th>
+                  <th>วันหมดอายุ</th><th>สถานะ</th>
+                </tr></thead>
+                <tbody class="dash-table" id="dash-table"></tbody>
+              </table>
+            </div>
+          </div>
 
           <div class="card">
             <div class="card-head">
-              <div class="card-title">
+              <div class="card-title card-title-dept">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="20" x2="18" y2="10"/>
                   <line x1="12" y1="20" x2="12" y2="4"/>
@@ -196,30 +220,7 @@
             </div>
           </div>
         </div>
-
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
-                <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
-                <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-              </svg>
-              เครื่องมือที่ต้องดำเนินการ
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="goPage('instruments')">ดูทั้งหมด →</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr>
-                <th>รหัส</th><th>ชื่อเครื่องมือ</th><th>แผนก</th>
-                <th>วันหมดอายุ</th><th>ผู้รับผิดชอบ</th><th>สถานะ</th>
-              </tr></thead>
-              <tbody id="dash-table"></tbody>
-            </table>
-          </div>
-        </div>
-      </div><!-- /dashboard -->
+    </div><!-- /dashboard -->
 
       <!-- ── INSTRUMENTS ── -->
       <div class="page" id="page-instruments">
