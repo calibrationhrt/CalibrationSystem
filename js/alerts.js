@@ -1,4 +1,20 @@
 /* ── ALERTS PAGE ── */
+function initAlertsPage() {
+  const active    = tools.filter(t => (t.status || 'Active') === 'Active' && t.expire);
+  const todayStr  = formatDateLocal(getToday());
+  const allDates  = active.map(t => formatDateLocal(new Date(t.expire))).filter(Boolean).sort();
+  const pastDates = allDates.filter(d => d <= todayStr);
+
+  selectedDate = pastDates.length ? pastDates[pastDates.length - 1]
+               : allDates.length  ? allDates[0]
+               : todayStr;
+
+  alertFilter = 'all';
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('chip-all')?.classList.add('active');
+
+  renderAlerts();
+}
 
 function filterAlerts(f) {
   alertFilter = f;
@@ -8,15 +24,22 @@ function filterAlerts(f) {
 }
 
 function updateAlertChips() {
-  const warn      = getWarnDays();
-  const active    = tools.filter(t => (t.status || 'Active') === 'Active'); // ✅ กรอง Active
-  const overdue   = active.filter(t => diffDays(t.expire) < 0).length;      // ✅ แก้
-  const warnCount = active.filter(t => diffDays(t.expire) >= 0 && diffDays(t.expire) <= warn).length; // ✅ แก้
-  const ok        = active.filter(t => diffDays(t.expire) > warn).length;   // ✅ แก้
+  const warn  = getWarnDays();
+  let active  = tools.filter(t => (t.status || 'Active') === 'Active');
 
+  if (selectedDate) {
+    active = active.filter(t => t.expire && formatDateLocal(new Date(t.expire)) === selectedDate);
+  }
+
+  const overdue   = active.filter(t => diffDays(t.expire) < 0).length;
+  const warnCount = active.filter(t => diffDays(t.expire) >= 0 && diffDays(t.expire) <= warn).length;
+  const ok        = active.filter(t => diffDays(t.expire) > warn).length;
+ 
+
+  document.getElementById('chip-all').innerText     = `⚙️ ทั้งหมด (${active.length})`;
   document.getElementById('chip-overdue').innerText = `🔴 เกินกำหนด (${overdue})`;
   document.getElementById('chip-warn').innerText    = `🟡 ใกล้ครบกำหนด (${warnCount})`;
-  document.getElementById('chip-ok').innerText      = `✅ ปกติ (${ok})`;
+  document.getElementById('chip-ok').innerText      = `🟢 ปกติ (${ok})`;
 }
 
 function updateNavBadge() {
@@ -41,7 +64,17 @@ function updateNavBadge() {
 
 /* ── ปฏิทิน 28 วัน ── */
 function selectDate(dateStr) {
-  selectedDate = selectedDate === dateStr ? null : dateStr;
+  if (selectedDate === dateStr) {
+    const active    = tools.filter(t => (t.status || 'Active') === 'Active' && t.expire);
+    const todayStr  = formatDateLocal(getToday());
+    const allDates  = active.map(t => formatDateLocal(new Date(t.expire))).filter(Boolean).sort();
+    const pastDates = allDates.filter(d => d <= todayStr);
+    selectedDate    = pastDates.length ? pastDates[pastDates.length - 1]
+                    : allDates.length  ? allDates[0]
+                    : todayStr;
+  } else {
+    selectedDate = dateStr;
+  }
   renderAlerts();
 }
 
@@ -60,8 +93,8 @@ function renderCalendarTitle() {
   const year       = start.getFullYear() + 543;
 
   const text = start.getMonth() === end.getMonth()
-    ? `ปฏิทินการสอบเทียบ  ${startMonth} ${year}`
-    : `ปฏิทินการสอบเทียบ  ${startMonth} – ${endMonth} ${year}`;
+    ? `📝 ปฏิทินการสอบเทียบ  ${startMonth} ${year}`
+    : `📝 ปฏิทินการสอบเทียบ  ${startMonth} – ${endMonth} ${year}`;
 
   document.getElementById('cal-title').innerText = text;
 }
