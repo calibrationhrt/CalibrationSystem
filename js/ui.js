@@ -98,7 +98,7 @@ async function goPage(id) {
 
   const renderers = {
     instruments: renderInstruments,
-    alerts:      renderAlerts,
+    alerts:      initAlertsPage,
     history:     renderHistory,
     settings:    async () => { await initSettings(); }
   };
