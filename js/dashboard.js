@@ -82,19 +82,37 @@ function renderDeptBars() {
 function renderDashTable() {
   const focus = tools
     .filter(t => (t.status || 'Active') === 'Active')
-    .filter(t => getToolStatus(t) !== 'ok')
-    .sort((a, b) => diffDays(a.expire) - diffDays(b.expire))
-    .slice(0, 6);
+    .filter(t => {
+      const s = getToolStatus(t);
+      return s === 'overdue' || s === 'warn';
+    })
+    .sort((a, b) => diffDays(a.expire) - diffDays(b.expire));
 
-  document.getElementById('dash-table').innerHTML = focus.map(t => {
+  const tbody = document.getElementById('dash-table');
+
+  if (!focus.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">
+          <div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p>ไม่มีเครื่องมือที่ต้องดำเนินการ</p>
+          </div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = focus.map(t => {
     const s = getStatus(t.expire);
     return `
       <tr class="row-${s.cls}">
         <td><span class="code">${t.code}</span></td>
-        <td style="font-weight:500">${t.name}</td>
+        <td style="font-weight:400">${t.name}</td>
         <td>${t.dept}</td>
         <td>${fmtDate(t.expire)}</td>
-        <td>${t.owner}</td>
         <td><span class="badge ${s.badgeCls}"><span class="badge-dot"></span>${s.label}</span></td>
       </tr>`;
   }).join('');
