@@ -403,9 +403,12 @@ body {
   height: 15px;
   stroke: var(--green);
 }
+.card-title-dept {
+  padding: 3px;
+}
 
 .card-footer {
-  padding: 12px 16px 14px;
+  padding: 9px 9px 9px;
 }
 
 .settings-group-title {
@@ -502,6 +505,12 @@ body {
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.two-col2 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -717,7 +726,7 @@ tbody tr.row-warn    td { background: #fffbeb; }
 /* ── CODE CHIP ── */
 .code {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--blue);
   background: var(--blue-light);
   padding: 2px 7px;
@@ -1583,14 +1592,12 @@ textarea.form-control {
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
 /* ── DASHBOARD IMPROVEMENTS ── */
-
 /* Dept bars scroll */
 .dept-bars {
   padding: 12px 16px;
-  max-height: 260px;
+  max-height: 360px;
   overflow-y: auto;
 }
-
 .dept-row {
   margin-bottom: 11px;
 }
@@ -1631,6 +1638,36 @@ textarea.form-control {
   border-radius: 999px;
   transition: width .6s cubic-bezier(.4,0,.2,1);
 }
+
+/* instrument bars scroll */
+.required-tools .table-wrap {
+  max-height: 350px;
+  overflow-y: auto;
+}
+.required-tools thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* ── DASH TABLE COLUMNS ── */
+.required-tools table th:nth-child(1),
+.required-tools table td:nth-child(1) { width: 135px;  }  /* รหัส */
+
+.required-tools table th:nth-child(2),
+.required-tools table td:nth-child(2) { width: auto;  }  /* ชื่อเครื่องมือ — ยืดเต็มที่เหลือ */
+
+.required-tools table th:nth-child(3),
+.required-tools table td:nth-child(3) { width: 165px; }  /* แผนก */
+
+.required-tools table th:nth-child(4),
+.required-tools table td:nth-child(4) { width: 95px; }  /* วันหมดอายุ */
+
+.required-tools table th:nth-child(5),
+.required-tools table td:nth-child(5) { width: 110px; }  /* ผู้รับผิดชอบ */
+
+.required-tools table th:nth-child(6),
+.required-tools table td:nth-child(6) { width: 110px; }  /* สถานะ */
 
 /* KPI card pulse animation เมื่อมีค่า overdue */
 .kpi-card.kpi-red .kpi-val {
