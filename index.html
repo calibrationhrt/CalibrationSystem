@@ -225,39 +225,35 @@
       <!-- ── INSTRUMENTS ── -->
       <div class="page" id="page-instruments">
         <div class="page-header">
-          <div class="section-title">รายการเครื่องมือทั้งหมด</div>
+          <div class="instruments-title">📜 รายการเครื่องมือทั้งหมด</div>
           <button class="btn btn-primary admin-only" onclick="openAddModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            เพิ่มเครื่องมือ
+             ⚙️ เพิ่มเครื่องมือ
           </button>
         </div>
         <div class="card">
           <div class="search-row">
-          <div class="search-input">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="text" id="inst-search" placeholder="ค้นหา รหัส / ชื่อเครื่องมือ..." oninput="renderInstruments()">
+            <div class="search-input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="inst-search" placeholder="ค้นหา รหัส / ชื่อเครื่องมือ..." oninput="renderInstruments()">
+            </div>
+            <select class="filter-select" id="inst-status-active" onchange="renderInstruments()">
+              <option value="">ทั้งหมด</option>
+              <option value="Active"> Active</option>
+              <option value="Inactive"> Inactive</option>
+            </select>
+            <select class="filter-select" id="inst-status" onchange="renderInstruments()">
+              <option value="">สถานะทั้งหมด</option>
+              <option value="ok">ปกติ</option>
+              <option value="warn">ใกล้หมด</option>
+              <option value="overdue">เกินกำหนด</option>
+            </select>
+            <select class="filter-select" id="inst-dept" onchange="renderInstruments()">
+              <option value="">แผนกทั้งหมด</option>
+            </select>
           </div>
-          <select class="filter-select" id="inst-status-active" onchange="renderInstruments()">
-            <option value="">ทั้งหมด</option>
-            <option value="Active"> Active</option>
-            <option value="Inactive"> Inactive</option>
-          </select>
-          <select class="filter-select" id="inst-status" onchange="renderInstruments()">
-            <option value="">สถานะทั้งหมด</option>
-            <option value="ok">ปกติ</option>
-            <option value="warn">ใกล้หมด</option>
-            <option value="overdue">เกินกำหนด</option>
-          </select>
-          <select class="filter-select" id="inst-dept" onchange="renderInstruments()">
-            <option value="">แผนกทั้งหมด</option>
-          </select>
-        </div>
           <div class="table-wrap">
             <table>
               <thead><tr>
@@ -281,24 +277,55 @@
             </svg>
             <p>ไม่พบเครื่องมือที่ค้นหา</p>
           </div>
+
+          <!-- PAGINATION BAR -->
+          <div class="table-pagination" id="inst-pagination">
+            <span class="pagination-info" id="inst-paging-info">
+              แสดง <strong id="inst-range">-</strong> จาก <strong id="inst-total">0</strong> รายการ
+            </span>
+            <div class="pagination-controls">
+              <button class="page-btn" id="inst-prev" onclick="instChangePage(instPage - 1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+              </button>
+              <div class="page-numbers" id="inst-page-numbers"></div>
+              <button class="page-btn" id="inst-next" onclick="instChangePage(instPage + 1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
+            </div>
+            <div class="pagination-right">
+              <span style="font-size:12px; color:var(--text2);">แถวต่อหน้า</span>
+              <select class="per-page-select" id="inst-per-page" onchange="instChangePerPage(this.value)">
+                <option value="100" selected>100</option>
+                <option value="500">500</option>
+                <option value="1000">1,000</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div><!-- /instruments -->
 
       <!-- ── ALERTS ── -->
       <div class="page" id="page-alerts">
         <div class="section-title">การแจ้งเตือนวันครบกำหนดสอบเทียบ</div>
-        <div class="alert-page-filters">
-          <div class="filter-chip active" id="chip-all" onclick="filterAlerts('all')">ทั้งหมด</div>
-          <div class="filter-chip chip-red" id="chip-overdue" onclick="filterAlerts('overdue')">🔴 เกินกำหนด</div>
-          <div class="filter-chip chip-orange" id="chip-warn" onclick="filterAlerts('warn')">🟡 ใกล้ครบกำหนด</div>
-          <div class="filter-chip" id="chip-ok" onclick="filterAlerts('ok')">✅ ปกติ</div>
-        </div>
+
         <div class="card" style="margin-bottom:14px">
           <div class="card-head">
             <div class="card-title" id="cal-title"></div>
           </div>
+          <div class="alert-page-filters" style="padding: 10px 10px 0; margin-bottom:0">
+            <div class="filter-chip active" id="chip-all" onclick="filterAlerts('all')">ทั้งหมด</div>
+            <div class="filter-chip chip-red" id="chip-overdue" onclick="filterAlerts('overdue')">🔴 เกินกำหนด</div>
+            <div class="filter-chip chip-orange" id="chip-warn" onclick="filterAlerts('warn')">🟡 ใกล้ครบกำหนด</div>
+            <div class="filter-chip" id="chip-ok" onclick="filterAlerts('ok')">✅ ปกติ</div>
+          </div>
+
           <div class="cal-strip" id="cal-strip"></div>
         </div>
+
         <div class="card">
           <div class="card-head">
             <div class="card-title">รายการแจ้งเตือนทั้งหมด</div>
@@ -504,7 +531,7 @@
   <div class="modal-backdrop" id="modal-add">
     <div class="modal">
       <div class="modal-head">
-        <div class="modal-title">➕ เพิ่มเครื่องมือใหม่</div>
+        <div class="modal-title">🖇️ เพิ่มเครื่องมือใหม่</div>
         <button class="modal-close" onclick="closeModal('modal-add')">✕</button>
       </div>
       <div class="modal-body">
