@@ -676,7 +676,7 @@ tbody tr.row-warn    td { background: #fffbeb; }
 #inst-tbody tr th:nth-child(6) { width: 45px; } /* วันหมดอายุ */
 
 #inst-tbody tr td:nth-child(7),
-#inst-tbody tr th:nth-child(7) { width: 85px;  } /* สถานะ */
+#inst-tbody tr th:nth-child(7) { width: 80px;  } /* สถานะ */
 
 #page-instruments .card {
   display: flex;
