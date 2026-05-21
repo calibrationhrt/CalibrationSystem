@@ -60,7 +60,7 @@ body {
 /* ── TOPBAR ── */
 .topbar {
   height: var(--topbar-h);
-  background: linear-gradient(90deg, #0f766e, #16a06e);
+  background: linear-gradient(90deg, #457aab, #7fc3ce);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -311,7 +311,7 @@ body {
 .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
 .nav-item span { font-size: 9px; line-height: 1; }
 .nav-item:hover { background: #334155; color: #cbd5e1; }
-.nav-item.active { background: var(--green); color: #fff; }
+.nav-item.active { background: #0269bc; color: #fff; }
 
 .nav-badge {
   position: absolute;
@@ -1534,7 +1534,6 @@ textarea.form-control {
   justify-content: center;
   background-color: white;
   color: #000000;
-  border: 1px solid rgb(49, 98, 61);
 }
 .btn-manage:hover {
   background-color: #16a06e;
