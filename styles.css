@@ -658,7 +658,7 @@ tbody tr.row-warn    td { background: #fffbeb; }
 
 /* ── INSTRUMENTS TABLE COLUMNS ── */
 #inst-tbody tr td:nth-child(1),
-#inst-tbody tr th:nth-child(1) { width: 85px; } /* รหัส */
+#inst-tbody tr th:nth-child(1) { width: 90px; } /* รหัส */
 
 #inst-tbody tr td:nth-child(2),
 #inst-tbody tr th:nth-child(2) { width: 160px; } /* ชื่อเครื่องมือ */
