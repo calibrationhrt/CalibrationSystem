@@ -658,25 +658,25 @@ tbody tr.row-warn    td { background: #fffbeb; }
 
 /* ── INSTRUMENTS TABLE COLUMNS ── */
 #inst-tbody tr td:nth-child(1),
-#inst-tbody tr th:nth-child(1) { width: 90px; } /* รหัส */
+#inst-tbody tr th:nth-child(1) { width: 85px; } /* รหัส */
 
 #inst-tbody tr td:nth-child(2),
-#inst-tbody tr th:nth-child(2) { width: 185px; } /* ชื่อเครื่องมือ */
+#inst-tbody tr th:nth-child(2) { width: 160px; } /* ชื่อเครื่องมือ */
 
 #inst-tbody tr td:nth-child(3),
-#inst-tbody tr th:nth-child(3) { width: 45px;  } /* ประเภท */
+#inst-tbody tr th:nth-child(3) { width: 100px; } /* ประเภท */
 
 #inst-tbody tr td:nth-child(4),
-#inst-tbody tr th:nth-child(4) { width: 135px;  } /* แผนก */
+#inst-tbody tr th:nth-child(4) { width: 130px;  } /* แผนก */
 
 #inst-tbody tr td:nth-child(5),
-#inst-tbody tr th:nth-child(5) { width: 10px; } /* สอบเทียบล่าสุด */
+#inst-tbody tr th:nth-child(5) { width: 1rem; } /* สอบเทียบล่าสุด */
 
 #inst-tbody tr td:nth-child(6),
-#inst-tbody tr th:nth-child(6) { width: 50px; } /* วันหมดอายุ */
+#inst-tbody tr th:nth-child(6) { width: 45px; } /* วันหมดอายุ */
 
 #inst-tbody tr td:nth-child(7),
-#inst-tbody tr th:nth-child(7) { width: 90px;  } /* สถานะ */
+#inst-tbody tr th:nth-child(7) { width: 85px;  } /* สถานะ */
 
 #page-instruments .card {
   display: flex;
