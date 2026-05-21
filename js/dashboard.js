@@ -118,102 +118,252 @@ function renderDashTable() {
   }).join('');
 }
 
-function renderDonutChart() {
-  const activeTools = tools.filter(t => (t.status || 'Active') === 'Active');
-  const total   = activeTools.length;
-  const ok      = activeTools.filter(t => getToolStatus(t) === 'ok').length;
-  const warn    = activeTools.filter(t => getToolStatus(t) === 'warn').length;
-  const overdue = activeTools.filter(t => getToolStatus(t) === 'overdue').length;
+/* ── MONTHLY CALIBRATION CHART ── */
+let mcChart      = null;
+let mcYear       = null;
+let mcYearList   = [];
+ 
+function getMCData(year) {
+  const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const now   = new Date();
+  const beNow = now.getFullYear() + 543;
+  const maxM  = (year === beNow) ? now.getMonth() : 11; // 0-based
+ 
+  const done    = Array(maxM + 1).fill(0);
+  const pending = Array(maxM + 1).fill(0);
+ 
+  // --- "done" = tools whose last calibration date falls in this month/year
+  const ceYear = year - 543;
+  (tools || []).forEach(t => {
+    if (!t.last) return;
+    const d = new Date(t.last);
+    if (isNaN(d)) return;
+    if (d.getFullYear() === ceYear && d.getMonth() <= maxM) {
+      done[d.getMonth()]++;
+    }
+  });
+ 
+  // Also count from calibration history if available
+  if (typeof calHistory !== 'undefined') {
+    calHistory.forEach(h => {
+      const d = new Date(h.date || h.cal_date);
+      if (isNaN(d)) return;
+      if (d.getFullYear() === ceYear && d.getMonth() <= maxM) {
+        done[d.getMonth()]++;
+      }
+    });
+  }
+ 
+  // --- "pending" = overdue + warn count (static current snapshot shown on current month)
+  const activeTools = (tools || []).filter(t => (t.status || 'Active') === 'Active');
+  const pendingCount = activeTools.filter(t => {
+    const s = getToolStatus(t);
+    return s === 'overdue' || s === 'warn';
+  }).length;
+  if (maxM >= 0) pending[maxM] = pendingCount;
+ 
+  return {
+    labels:  MONTHS.slice(0, maxM + 1),
+    done:    done,
+    pending: pending
+  };
+}
 
-  const el = document.getElementById('donut-chart-wrap');
-  if (!el) return;
-
-  if (total === 0) {
-    el.innerHTML = `<div class="empty"><p>ยังไม่มีข้อมูล</p></div>`;
+function buildMCYears() {
+  const now   = new Date();
+  const beNow = now.getFullYear() + 543;
+  // Show current year + previous year
+  return [beNow, beNow - 1];
+}
+ 
+function renderMonthChart() {
+  const canvasEl = document.getElementById('mc-chart');
+  if (!canvasEl) return;
+ 
+  // Build year list once
+  mcYearList = buildMCYears();
+  if (!mcYear || !mcYearList.includes(mcYear)) mcYear = mcYearList[0];
+ 
+  // Build dropdown
+  const dropEl = document.getElementById('mc-year-dropdown');
+  const lblEl  = document.getElementById('mc-year-label');
+  if (dropEl) {
+    dropEl.innerHTML = mcYearList.map(y =>
+      `<div class="mc-year-opt${y === mcYear ? ' active' : ''}" data-year="${y}">พ.ศ. ${y}</div>`
+    ).join('');
+    dropEl.querySelectorAll('.mc-year-opt').forEach(opt => {
+      opt.addEventListener('click', e => {
+        e.stopPropagation();
+        mcYear = parseInt(opt.dataset.year);
+        dropEl.classList.remove('open');
+        updateMCChart();
+      });
+    });
+  }
+  if (lblEl) lblEl.textContent = mcYear;
+ 
+  // Year btn toggle
+  const btnEl = document.getElementById('mc-year-btn');
+  if (btnEl && !btnEl._mcBound) {
+    btnEl._mcBound = true;
+    btnEl.addEventListener('click', e => {
+      e.stopPropagation();
+      dropEl.classList.toggle('open');
+    });
+    document.addEventListener('click', () => dropEl && dropEl.classList.remove('open'));
+  }
+ 
+  const d = getMCData(mcYear);
+  updateMCKPI(d);
+ 
+  const textClr = 'rgba(0,0,0,0.36)';
+  const gridClr = 'rgba(0,0,0,0.06)';
+  const lblClr  = 'rgba(0,0,0,0.48)';
+ 
+  // Rounded top plugin
+  const roundPlugin = {
+    id: 'mcRoundBars',
+    afterDatasetsDraw(chart) {
+      const {ctx} = chart;
+      chart.data.datasets.forEach((ds, di) => {
+        const meta = chart.getDatasetMeta(di);
+        if (meta.hidden) return;
+        meta.data.forEach(bar => {
+          if (!bar || bar.height <= 0) return;
+          const {x, y, width, height, base} = bar;
+          const r = Math.min(5, Math.abs(height)/2, width/2);
+          ctx.save();
+          ctx.fillStyle = ds.backgroundColor;
+          ctx.beginPath();
+          ctx.moveTo(x - width/2 + r, y);
+          ctx.lineTo(x + width/2 - r, y);
+          ctx.quadraticCurveTo(x + width/2, y, x + width/2, y + r);
+          ctx.lineTo(x + width/2, base);
+          ctx.lineTo(x - width/2, base);
+          ctx.lineTo(x - width/2, y + r);
+          ctx.quadraticCurveTo(x - width/2, y, x - width/2 + r, y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        });
+      });
+    }
+  };
+ 
+  if (mcChart) {
+    mcChart.data.labels = d.labels;
+    mcChart.data.datasets[0].data = d.done;
+    mcChart.data.datasets[1].data = d.pending;
+    mcChart.update();
     return;
   }
-
-  const r  = 54;
-  const cx = 80;
-  const cy = 80;
-  const circumference = 2 * Math.PI * r;
-
-  function slice(value, offset, color) {
-    if (value === 0) return '';
-    const pct  = value / total;
-    const dash = pct * circumference;
-    const gap  = circumference - dash;
-    return `<circle
-      cx="${cx}" cy="${cy}" r="${r}"
-      fill="none" stroke="${color}" stroke-width="22"
-      stroke-dasharray="${dash} ${gap}"
-      stroke-dashoffset="${-offset}"
-      stroke-linecap="butt"
-      style="transition: stroke-dasharray .6s cubic-bezier(.4,0,.2,1)"
-    />`;
+ 
+  mcChart = new Chart(canvasEl.getContext('2d'), {
+    type: 'bar',
+    plugins: [roundPlugin],
+    data: {
+      labels: d.labels,
+      datasets: [
+        {
+          label: 'สอบเทียบสำเร็จ',
+          data: d.done,
+          backgroundColor: '#4E9AF1',
+          barPercentage: 0.85,
+          categoryPercentage: 0.45,
+          borderSkipped: false,
+          datalabels: {
+            color: lblClr, anchor: 'end', align: 'end', offset: -1,
+            font: { size: 10, weight: '500', family: 'Sarabun' },
+            formatter: v => v > 0 ? v : ''
+          }
+        },
+        {
+          label: 'รอดำเนินการ',
+          data: d.pending,
+          backgroundColor: '#F4A259',
+          barPercentage: 0.85,
+          categoryPercentage: 0.45,
+          borderSkipped: false,
+          datalabels: {
+            color: lblClr, anchor: 'end', align: 'end', offset: -1,
+            font: { size: 10, weight: '500', family: 'Sarabun' },
+            formatter: v => v > 0 ? v : ''
+          }
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 16 } },
+      animation: { duration: 600, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        datalabels: {},
+        tooltip: {
+          backgroundColor: '#fff',
+          titleColor: '#0f172a',
+          bodyColor: '#64748b',
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            title: items => `${items[0].label} พ.ศ. ${mcYear}`,
+            label: item  => `  ${item.dataset.label}: ${item.raw} เครื่อง`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: textClr, font: { size: 11, family: 'Sarabun' } }
+        },
+        y: {
+          grid: { color: gridClr, drawTicks: false },
+          border: { display: false, dash: [4,4] },
+          ticks: { color: textClr, font: { size: 11, family: 'Sarabun' }, maxTicksLimit: 5, padding: 8 }
+        }
+      }
+    }
+  });
+}
+ 
+function updateMCChart() {
+  const dropEl = document.getElementById('mc-year-dropdown');
+  const lblEl  = document.getElementById('mc-year-label');
+  if (lblEl) lblEl.textContent = mcYear;
+  if (dropEl) {
+    dropEl.querySelectorAll('.mc-year-opt').forEach(o => {
+      o.classList.toggle('active', parseInt(o.dataset.year) === mcYear);
+    });
   }
-
-  const okOffset   = 0;
-  const warnOffset = (ok / total) * circumference;
-  const overdueOffset = warnOffset + (warn / total) * circumference;
-
-  const okPct      = Math.round((ok / total) * 100);
-  const warnPct    = Math.round((warn / total) * 100);
-  const overduePct = Math.round((overdue / total) * 100);
-
-  el.innerHTML = `
-    <div class="donut-wrap">
-      <div class="donut-svg-wrap">
-        <svg viewBox="0 0 160 160" width="160" height="160">
-          <!-- background ring -->
-          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
-            stroke="var(--border)" stroke-width="22"/>
-          ${slice(ok,      okOffset,      '#16a06e')}
-          ${slice(warn,    warnOffset,    '#f59e0b')}
-          ${slice(overdue, overdueOffset, '#ef4444')}
-          <!-- center text -->
-          <text x="${cx}" y="${cy - 8}" text-anchor="middle"
-            font-size="22" font-weight="700" fill="var(--text)"
-            font-family="Sarabun,sans-serif">${total}</text>
-          <text x="${cx}" y="${cy + 12}" text-anchor="middle"
-            font-size="10" fill="var(--text2)"
-            font-family="Sarabun,sans-serif">เครื่องมือ</text>
-        </svg>
-      </div>
-
-      <div class="donut-legend">
-        <div class="donut-legend-item">
-          <div class="donut-dot" style="background:#16a06e"></div>
-          <div class="donut-legend-body">
-            <span class="donut-legend-label">ปกติ</span>
-            <span class="donut-legend-val">${ok} <span class="donut-legend-pct">${okPct}%</span></span>
-          </div>
-        </div>
-        <div class="donut-legend-item">
-          <div class="donut-dot" style="background:#f59e0b"></div>
-          <div class="donut-legend-body">
-            <span class="donut-legend-label">ใกล้ครบกำหนด</span>
-            <span class="donut-legend-val">${warn} <span class="donut-legend-pct">${warnPct}%</span></span>
-          </div>
-        </div>
-        <div class="donut-legend-item">
-          <div class="donut-dot" style="background:#ef4444"></div>
-          <div class="donut-legend-body">
-            <span class="donut-legend-label">เกินกำหนด</span>
-            <span class="donut-legend-val">${overdue} <span class="donut-legend-pct">${overduePct}%</span></span>
-          </div>
-        </div>
-      </div>
-    </div>`;
+  const d = getMCData(mcYear);
+  updateMCKPI(d);
+  if (mcChart) {
+    mcChart.data.labels = d.labels;
+    mcChart.data.datasets[0].data = d.done;
+    mcChart.data.datasets[1].data = d.pending;
+    mcChart.update();
+  }
+}
+ 
+function updateMCKPI(d) {
+  const doneEl    = document.getElementById('mc-done');
+  const pendingEl = document.getElementById('mc-pending');
+  if (doneEl)    doneEl.textContent    = d.done.reduce((a,b) => a+b, 0).toLocaleString('th-TH');
+  if (pendingEl) pendingEl.textContent = d.pending.reduce((a,b) => a+b, 0).toLocaleString('th-TH');
 }
 
 function renderDashboard() {
   document.querySelector('.kpi-grid').classList.add('loading');
 
   renderKPI();
-  renderDonutChart();
   renderDeptBars();
   renderDashTable();
+  renderMonthChart();
   updateNavBadge();
 
   document.querySelector('.kpi-grid').classList.remove('loading');
