@@ -23,24 +23,29 @@ function getResultClass(resultRaw) {
   return 'badge-warn';
 }
 
-async function renderHistory() {
+async function renderHistory(forceReload = false) {
   if (!tools.length) await loadTools();
 
-  const { data, error } = await client
-    .from('calibrations')
-    .select('*')
-    .order('date', { ascending: false });
+  if (!calHistoryLoaded || forceReload) {
+    const { data, error } = await client
+      .from('calibrations')
+      .select('*')
+      .order('date', { ascending: false });
 
-  if (error) {
-    console.error(error);
-    return;
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    calHistory       = data;
+    calHistoryLoaded = true;
   }
 
-  renderYearOptions(data);
+  renderYearOptions(calHistory);
 
   const toolMap = Object.fromEntries(tools.map(t => [String(t.id), t]));
 
-  let filtered = data;
+  let filtered = calHistory;
 
   if (selectedYear !== 'all') {
     const selected = selectedYear.toString().trim();
