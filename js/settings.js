@@ -171,15 +171,18 @@ async function addDept() {
     return;
   }
 
-  client.from('departments')
-    .insert([{ name: cleanName, active: true }])
-    .then(async ({ error }) => {
-      if (error) return showToast('❌ เพิ่มไม่สำเร็จ');
+  const { error } = await client
+    .from('departments')
+    .insert([{ name: cleanName, active: true }]);
 
-      await loadDepartments();
-      renderDeptModal();
-      showToast('✅ เพิ่มแผนกแล้ว');
-    });
+  if (error) {
+    showToast('❌ เพิ่มไม่สำเร็จ');
+    return;
+  }
+
+  await loadDepartments();
+  renderDeptModal();
+  showToast('✅ เพิ่มแผนกแล้ว');
 }
 
 async function editDept(id) {
@@ -199,19 +202,19 @@ async function deleteDept(id) {
 
   const count = tools.filter(t => t.dept === dept.name).length;
 
-  if (!confirm(`ลบแผนก "${dept.name}" ใช่ไหม?`)) return;
-
   if (count > 0) {
-    const go = confirm(
-      `ยังมีเครื่องมือ ${count} รายการในแผนกนี้\nต้องการไปจัดการตอนนี้ไหม?`
-    );
-
-    if (go) {
-      goPage('instruments');
-    }
-
+    showToast(`⚠ ยังมีเครื่องมือ ${count} รายการในแผนกนี้ กรุณาย้ายหรือลบก่อน`);
+    closeModal('modal-dept');
+    goPage('instruments');
     return;
   }
+
+  const confirmed = await showConfirmTypeModal(
+    '🗑 ลบแผนก',
+    `กรุณาพิมพ์ "${dept.name}" เพื่อยืนยันการลบ`,
+    dept.name
+  );
+  if (!confirmed) return;
 
   const { error } = await client
     .from('departments')
@@ -363,7 +366,14 @@ async function deleteItem(prefix, id) {
   const list = getList(prefix);
   const item = list.find(i => i.id === id);
   if (!item) return;
-  if (!confirm(`ลบ "${item.name}" ใช่ไหม?`)) return;
+
+  const label = prefix === 'type' ? 'ประเภท' : 'ตำแหน่ง';
+  const confirmed = await showConfirmTypeModal(
+    `🗑 ลบ${label}`,
+    `กรุณาพิมพ์ "${item.name}" เพื่อยืนยันการลบ`,
+    item.name
+  );
+  if (!confirmed) return;
 
   const { error } = await client.from(tableMap[prefix]).delete().eq('id', id);
   if (error) { showToast('❌ ลบไม่สำเร็จ'); return; }
@@ -382,13 +392,17 @@ async function addType() {
     return;
   }
 
-  client.from('types')
-    .insert([{ name: cleanName, active: true }])
-    .then(async ({ error }) => {
-      if (error) { showToast('❌ เพิ่มไม่สำเร็จ'); return; }
-      await reloadAndRender('type');
-      showToast('✅ เพิ่มประเภทแล้ว');
-    });
+  const { error } = await client
+    .from('types')
+    .insert([{ name: cleanName, active: true }]);
+
+  if (error) {
+    showToast('❌ เพิ่มไม่สำเร็จ');
+    return;
+  }
+
+  await reloadAndRender('type');
+  showToast('✅ เพิ่มประเภทแล้ว');
 }
 
 async function addLocation() {
@@ -402,13 +416,17 @@ async function addLocation() {
     return;
   }
 
-  client.from('locations')
-    .insert([{ name: cleanName, active: true }])
-    .then(async ({ error }) => {
-      if (error) { showToast('❌ เพิ่มไม่สำเร็จ'); return; }
-      await reloadAndRender('loc');
-      showToast('✅ เพิ่มตำแหน่งแล้ว');
-    });
+  const { error } = await client
+    .from('locations')
+    .insert([{ name: cleanName, active: true }]);
+
+  if (error) {
+    showToast('❌ เพิ่มไม่สำเร็จ');
+    return;
+  }
+
+  await reloadAndRender('loc');
+  showToast('✅ เพิ่มตำแหน่งแล้ว');
 }
 
 async function reloadAndRender(prefix) {
