@@ -147,11 +147,14 @@ function normalizeInterval(input) {
 function formatInterval(interval) {
   if (!interval) return '-';
 
+  // normalize ก่อน เผื่อ DB เก็บรูปแบบอื่น เช่น "1 year", "6 months"
+  const normalized = normalizeInterval(interval) || interval;
+
   const regex = /(\d+)(y|m|d)/g;
   let match;
   let result = [];
 
-  while ((match = regex.exec(interval)) !== null) {
+  while ((match = regex.exec(normalized)) !== null) {
     const value = parseInt(match[1]);
     const unit  = match[2];
 
