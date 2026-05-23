@@ -34,7 +34,7 @@ function downloadTemplate() {
   const headers = IMPORT_COLUMNS.map(c => c.label);
   const example = [
     'PG-001', 'Pressure Gauge', 'เกจ', 'QC', 'ห้องทดสอบ',
-    'สมชาย ใจดี', '2024-01-15', '1y', 'External', 'CERT-001', 'TH-LAB'
+    'สมชาย ใจดี', '2024-01-15', '1y', 'External', 'CERT-001', 'TH-LAB', 'Active'
   ];
 
   const ws = XLSX.utils.aoa_to_sheet([headers, example]);
@@ -42,12 +42,7 @@ function downloadTemplate() {
   // กำหนดความกว้างคอลัมน์
   ws['!cols'] = IMPORT_COLUMNS.map((_, i) => ({ wch: i < 2 ? 20 : 16 }));
 
-  // ทำให้ header เด่น
-  headers.forEach((_, i) => {
-    const cell = XLSX.utils.encode_cell({ r: 0, c: i });
-    if (!ws[cell]) return;
-    ws[cell].s = { font: { bold: true }, fill: { fgColor: { rgb: 'D1FAE5' } } };
-  });
+  // หมายเหตุ: ws[cell].s ไม่รองรับใน SheetJS Community Edition
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'เครื่องมือ');
@@ -177,10 +172,10 @@ function renderImportPreview() {
         return `
           <tr style="${bg}">
             <td style="padding:6px 8px;color:var(--text2)">${r._row}</td>
-            <td style="padding:6px 8px;font-weight:500">${r.code || '-'}</td>
-            <td style="padding:6px 8px">${r.name || '-'}</td>
-            <td style="padding:6px 8px">${r.dept || '-'}</td>
-            <td style="padding:6px 8px">${r.owner || '-'}</td>
+            <td style="padding:6px 8px;font-weight:500">${escapeHtml(r.code || '-')}</td>
+            <td style="padding:6px 8px">${escapeHtml(r.name || '-')}</td>
+            <td style="padding:6px 8px">${escapeHtml(r.dept || '-')}</td>
+            <td style="padding:6px 8px">${escapeHtml(r.owner || '-')}</td>
             <td style="padding:6px 8px">${r.expire ? fmtDate(r.expire) : '-'}</td>
             <td style="padding:6px 8px">
               ${hasErr
@@ -369,10 +364,10 @@ function renderInstTable() {
     const s = getStatus(t.expire);
     return `
       <tr class="row-${s.cls}" style="cursor:pointer" onclick="openDetail(${t.id})">
-        <td><span class="code">${t.code}</span></td>
-        <td style="font-weight:500">${t.name}</td>
-        <td><span class="badge badge-blue">${t.type}</span></td>
-        <td>${t.dept}</td>
+        <td><span class="code">${escapeHtml(t.code)}</span></td>
+        <td style="font-weight:500">${escapeHtml(t.name)}</td>
+        <td><span class="badge badge-blue">${escapeHtml(t.type || '')}</span></td>
+        <td>${escapeHtml(t.dept || '')}</td>
         <td>${fmtDate(t.last)}</td>
         <td style="font-weight:${s.cls !== 'ok' ? '600' : '400'}">${fmtDate(t.expire)}</td>
         <td><span class="badge ${s.badgeCls}"><span class="badge-dot"></span>${s.label}</span></td>
@@ -761,10 +756,17 @@ async function saveCalibration() {
   } else {
     const newExpire = calcExpire(date, tool.interval);
 
-    await client
+    const { error: updateErr } = await client
       .from('tools')
       .update({ last: date, expire: newExpire })
       .eq('id', currentToolId);
+
+    if (updateErr) {
+      console.error('update tool error:', updateErr);
+      showToast('⚠ บันทึกประวัติแล้ว แต่อัปเดตวันหมดอายุไม่สำเร็จ');
+      await loadTools();
+      return;
+    }
   }
 
   await loadTools();
@@ -785,9 +787,14 @@ async function deleteTool() {
     return;
   }
 
-  if (!confirm('ลบเครื่องมือนี้ใช่ไหม ?')) return;
-
   const tool = tools.find(t => t.id === currentToolId);
+
+  const confirmed = await showConfirmTypeModal(
+    '🗑 ลบเครื่องมือ',
+    `การดำเนินการนี้ไม่สามารถย้อนกลับได้ กรุณาพิมพ์รหัส "${tool?.code}" เพื่อยืนยัน`,
+    tool?.code || ''
+  );
+  if (!confirmed) return;
 
   const { error } = await client
     .from('tools')
