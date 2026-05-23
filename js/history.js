@@ -119,6 +119,8 @@ async function clearHistory() {
     return;
   }
 
+  calHistory       = [];
+  calHistoryLoaded = false;
   renderHistory();
   showToast('🗑 ล้างประวัติเรียบร้อยแล้ว');
 }
