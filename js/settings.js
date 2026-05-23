@@ -109,7 +109,7 @@ async function updateDeptName(id, name) {
 
   const { error } = await client
     .from('departments')
-    .update({ name })
+    .update({ name: cleanName })
     .eq('id', id);
 
   if (error) {
@@ -118,7 +118,7 @@ async function updateDeptName(id, name) {
   }
 
   if (oldName) {
-    await client.from('tools').update({ dept: name }).eq('dept', oldName);
+    await client.from('tools').update({ dept: cleanName }).eq('dept', oldName);
   }
 
   await loadDepartments();
@@ -128,7 +128,7 @@ async function updateDeptName(id, name) {
   renderDashboard();
   renderInstruments();
 
-  showToast(`✅ เปลี่ยนชื่อแผนก "${oldName}" → "${name}" แล้ว`);
+  showToast(`✅ เปลี่ยนชื่อแผนก "${oldName}" → "${cleanName}" แล้ว`);
 }
 
 async function initSettings() {
