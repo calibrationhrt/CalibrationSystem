@@ -627,7 +627,7 @@ function openEditModal() {
   document.getElementById('edit-owner').value    = t.owner;
   document.getElementById('edit-dept').value     = t.dept   || '';
   document.getElementById('edit-last').value     = t.last;
-  document.getElementById('edit-interval').value = t.interval;
+  document.getElementById('edit-interval').value = t.interval || '';
   document.getElementById('edit-source').value   = t.source || 'internal';
   document.getElementById('edit-loc').value      = t.loc    || '';
   document.getElementById('edit-type').value     = t.type   || '';
@@ -649,8 +649,14 @@ async function updateTool() {
   const type   = document.getElementById('edit-type').value;
   const status = document.getElementById('edit-status').value; 
 
-  const rawInterval = document.getElementById('edit-interval').value;
-  const interval    = normalizeInterval(rawInterval);
+  const rawInterval = document.getElementById('edit-interval').value.trim();
+  const interval    = rawInterval ? normalizeInterval(rawInterval) : null;
+
+  // ถ้ากรอก interval มาแต่ format ผิด → block
+  if (rawInterval && !interval) {
+    showToast('⚠ รูปแบบรอบไม่ถูกต้อง เช่น 1d, 6m, 1y');
+    return;
+  }
 
   const old = tools.find(t => t.id === currentToolId);
 
@@ -664,11 +670,6 @@ async function updateTool() {
   
   if (!code || !name) {
     showToast('⚠ กรุณากรอกข้อมูลให้ครบ');
-    return;
-  }
-
-  if (!interval) {
-    showToast('⚠ รูปแบบรอบไม่ถูกต้อง');
     return;
   }
 
