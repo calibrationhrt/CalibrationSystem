@@ -180,10 +180,10 @@ function renderAlertList() {
         <div class="alert-icon ${s.cls}">${alertIconSvg(s.cls)}</div>
         <div class="alert-body">
           <div class="alert-name">
-            ${t.name}
-            <span style="font-size:10px;color:var(--text2)">#${t.code}</span>
+            ${escapeHtml(t.name)}
+            <span style="font-size:10px;color:var(--text2)">#${escapeHtml(t.code)}</span>
           </div>
-          <div class="alert-meta">${t.dept} · ${t.owner} · หมดอายุ ${fmtDate(t.expire)}</div>
+          <div class="alert-meta">${escapeHtml(t.dept || '')} · ${escapeHtml(t.owner || '')} · หมดอายุ ${fmtDate(t.expire)}</div>
         </div>
         <div class="alert-days ${s.cls}">${s.label}</div>
       </div>`;
