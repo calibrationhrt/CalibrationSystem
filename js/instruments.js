@@ -520,16 +520,26 @@ function openDetail(id) {
   const s            = getStatus(t.expire);
   const expireColor  = s.cls === 'ok' ? 'var(--green)' : s.cls === 'warn' ? 'var(--orange)' : 'var(--red)';
 
+  const eName   = escapeHtml(t.name);
+  const eCode   = escapeHtml(t.code);
+  const eDept   = escapeHtml(t.dept   || '');
+  const eOwner  = escapeHtml(t.owner  || '');
+  const eLoc    = escapeHtml(t.loc    || '');
+  const eType   = escapeHtml(t.type   || '');
+  const eCert   = escapeHtml(t.cert   || '-');
+  const eLab    = escapeHtml(t.lab    || '-');
+  const eStatus = escapeHtml(t.status || 'Active');
+
   document.getElementById('detail-title').innerHTML =
-  `<span class="code" style="font-size:12px">${t.code}</span>
+  `<span class="code" style="font-size:12px">${eCode}</span>
    <span class="badge ${t.status === 'Active' ? 'badge-ok' : 'badge-overdue'}" 
-         style="font-size:11px;margin-left:6px">
-     <span class="badge-dot"></span>${t.status || 'Active'}
+         style="font-size:11px;margin-left:7px">
+     <span class="badge-dot"></span>${eStatus}
    </span>`;
 
   document.getElementById('detail-body').innerHTML = `
-    <div style="margin-bottom:12px">
-      <span class="badge ${s.badgeCls}" style="font-size:13px;padding:5px 14px">
+    <div style="margin-bottom:7px; display:flex; justify-content:flex-end">
+      <span class="badge ${s.badgeCls}" style="font-size:10px;padding:4px 10px">
         <span class="badge-dot"></span>${s.label}
       </span>
     </div>
@@ -537,11 +547,11 @@ function openDetail(id) {
     <div class="detail-grid">
       <div class="detail-item">
         <div class="detail-key">ชื่อเครื่องมือ ${updatedMark('name')}</div>
-        <div class="detail-val">${t.name}</div>
+        <div class="detail-val">${eName}</div>
       </div>
       <div class="detail-item">
         <div class="detail-key">รหัสเครื่องมือ</div>
-        <div class="detail-val">${t.code}</div>
+        <div class="detail-val">${eCode}</div>
       </div>
       <div class="detail-item">
         <div class="detail-key">สอบเทียบล่าสุด ${updatedMark('last')}</div>
@@ -557,15 +567,15 @@ function openDetail(id) {
       </div>
       <div class="detail-item">
         <div class="detail-key">ผู้รับผิดชอบ ${updatedMark('owner')}</div>
-        <div class="detail-val">${t.owner}</div>
+        <div class="detail-val">${eOwner}</div>
       </div>
       <div class="detail-item">
         <div class="detail-key">แผนก ${updatedMark('dept')}</div>
-        <div class="detail-val">${t.dept}</div>
+        <div class="detail-val">${eDept}</div>
       </div>
       <div class="detail-item">
         <div class="detail-key">ตำแหน่งที่ตั้ง</div>
-        <div class="detail-val">${t.loc}</div>
+        <div class="detail-val">${eLoc}</div>
       </div>
       <div class="detail-item">
         <div class="detail-key">แหล่งสอบเทียบ</div>
@@ -577,27 +587,33 @@ function openDetail(id) {
       </div>
       <div class="detail-item">
         <div class="detail-key">ประเภทเครื่องมือ</div>
-        <div class="detail-val">${t.type}</div>
+        <div class="detail-val">${eType}</div>
       </div>
       <div class="detail-item">
         <div class="detail-key">เลขที่ใบรับรอง</div>
-        <div class="detail-val" style="color:var(--blue)">${t.cert}</div>
+        <div class="detail-val" style="color:var(--blue)">${eCert}</div>
       </div>
       <div class="detail-item">
         <div class="detail-key">ห้องปฏิบัติการ</div>
-        <div class="detail-val">${t.lab}</div>
+        <div class="detail-val">${eLab}</div>
       </div>
     </div>`;
 
   openModal('modal-detail');
 
   document.querySelector('#modal-detail .modal-foot').innerHTML = isAdmin() ? `
-    <div class="left-btns">
-      <button class="btn btn-danger" onclick="deleteTool()">ลบ</button>
-      <button class="btn btn-fixed"  onclick="openEditModal()">แก้ไข</button>
+    <div class="left-btns dropdown">
+      <button class="btn btn-fixed dropdown-btn" onclick="toggleMenu(event)">⚙</button>
+        <div class="dropdown-menu" id="setting-menu">
+        <button class="dropdown-item" onclick="openEditModal()">✏ แก้ไข</button>
+        <button class="dropdown-item danger" onclick="deleteTool()">🗑 ลบ</button>
+      </div>
     </div>
+
     <div class="right-btns">
-      <button class="btn btn-primary" onclick="openCalModal()">บันทึกการสอบเทียบ</button>
+      <button class="btn btn-primary" onclick="openCalModal()">
+        บันทึกการสอบเทียบ
+      </button>
     </div>
   ` : `
     <div style="color:var(--text2);font-size:12px;padding:4px 0">
@@ -757,6 +773,7 @@ async function saveCalibration() {
   openDetail(currentToolId);
   showToast('✅ บันทึกการสอบเทียบแล้ว');
 
+  calHistoryLoaded = false;
   renderDashboard();
   renderInstruments();
 }
