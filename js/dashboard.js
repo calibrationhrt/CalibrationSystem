@@ -61,7 +61,7 @@ function renderDeptBars() {
       return `
         <div class="dept-row">
           <div class="dept-head">
-            <span class="dept-name" title="${name}">${name}</span>
+            <span class="dept-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
             <span class="dept-stat" style="color:${color}">${pct}% <span style="font-weight:400;color:var(--text2)">(${total})</span></span>
           </div>
           <div class="bar-bg">
@@ -109,9 +109,9 @@ function renderDashTable() {
     const s = getStatus(t.expire);
     return `
       <tr class="row-${s.cls}">
-        <td><span class="code">${t.code}</span></td>
-        <td style="font-weight:400">${t.name}</td>
-        <td>${t.dept}</td>
+        <td><span class="code">${escapeHtml(t.code)}</span></td>
+        <td style="font-weight:400">${escapeHtml(t.name)}</td>
+        <td>${escapeHtml(t.dept || '')}</td>
         <td>${fmtDate(t.expire)}</td>
         <td><span class="badge ${s.badgeCls}"><span class="badge-dot"></span>${s.label}</span></td>
       </tr>`;
