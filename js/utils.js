@@ -278,3 +278,19 @@ function initCustomSelects() {
     }
   });
 }
+
+function toggleMenu(event){
+  event.stopPropagation();
+
+  document
+    .getElementById("setting-menu")
+    .classList.toggle("show");
+}
+
+document.addEventListener("click", () => {
+  const menu = document.getElementById("setting-menu");
+
+  if(menu){
+    menu.classList.remove("show");
+  }
+});
