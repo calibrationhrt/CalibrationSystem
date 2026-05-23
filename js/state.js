@@ -27,3 +27,7 @@ let toastTimer = null;
 /* Search Timer */
 let typeSearchTimer;
 let locSearchTimer;
+
+/* Calibration history cache */
+let calHistory        = [];
+let calHistoryLoaded  = false;
