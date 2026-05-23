@@ -103,7 +103,7 @@ function renderCalendar() {
   const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.',
                      'ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const todayStr    = formatDateLocal(getToday());
-  const activeTools = tools.filter(t => (t.status || 'Active') === 'Active'); // ✅ กรอง Active
+  const activeTools = tools.filter(t => (t.status || 'Active') === 'Active');
 
   const days = Array.from({ length: 28 }, (_, i) => {
     const d = new Date(getToday());
@@ -113,8 +113,8 @@ function renderCalendar() {
 
   document.getElementById('cal-strip').innerHTML = days.map(d => {
     const ds      = formatDateLocal(d);
-    const hasOver = activeTools.some(t => formatDateLocal(new Date(t.expire)) === ds && diffDays(t.expire) < 0);  // ✅ แก้
-    const hasWarn = activeTools.some(t => formatDateLocal(new Date(t.expire)) === ds && diffDays(t.expire) >= 0 && diffDays(t.expire) <= getWarnDays()); // ✅ แก้
+    const hasOver = activeTools.some(t => t.expire && formatDateLocal(new Date(t.expire)) === ds && diffDays(t.expire) < 0);
+    const hasWarn = activeTools.some(t => t.expire && formatDateLocal(new Date(t.expire)) === ds && diffDays(t.expire) >= 0 && diffDays(t.expire) <= getWarnDays());
     const isToday = ds === todayStr;
 
     let cls = '';
